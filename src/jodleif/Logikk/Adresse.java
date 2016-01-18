@@ -38,4 +38,13 @@ public class Adresse
 	{
 		return postnummer;
 	}
+
+	@Override
+	public String toString()
+	{
+		return  "gateadresse='" + gateadresse + '\'' +
+			", poststed='" + poststed + '\'' +
+			", postnummer=" + postnummer +
+			'}';
+	}
 }

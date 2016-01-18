@@ -64,4 +64,12 @@ public class Person
 	{
 		return kundenummer;
 	}
+
+	@Override
+	public String toString()
+	{
+		return  "navn='" + navn + '\'' +
+			", kundenummer=" + kundenummer +
+			"," + adresse;
+	}
 }
