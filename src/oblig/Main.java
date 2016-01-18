@@ -1,4 +1,4 @@
-package jodleif;
+package oblig;
 
 import javafx.application.Application;
 import javafx.collections.FXCollections;
@@ -9,8 +9,8 @@ import javafx.scene.control.*;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
-import jodleif.Logikk.Komparatorer;
-import jodleif.Logikk.Person;
+import oblig.Logikk.Komparatorer;
+import oblig.Logikk.Person;
 
 import java.util.ArrayList;
 import java.util.Collections;
