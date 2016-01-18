@@ -15,10 +15,14 @@ import jodleif.Logikk.Person;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Optional;
 
 /**
  * Alg.Dat innlevering
  * Versjon 3.
+ *
+ * Implementert på en litt annen måte enn spesifisert.
+ * Syntes dette ble en meget elegant løsning.
  */
 public class Main extends Application
 {
@@ -27,15 +31,27 @@ public class Main extends Application
 	private ComboBox<String> comboBox;
 	private Button sortButton;
 	private ToggleButton sorterBaklengs;
-	private Comparator<Person> comparator = Komparatorer::comparePostNr; // Initialisere med en standardverdi
 	private final ArrayList<Person> personer = new ArrayList<>();
 
+	/**
+	 * Metodereferanse til komparator metode.
+	 * Denne styres av GUIet gjennom comboboxen.
+	 * se i metoden "opprettGUIelementer"!
+	 *
+	 * De ulike komparatorene er definert i klassen Logikk.Komparatorer
+	 */
+	private Comparator<Person> comparator = Komparatorer::compareNavn; // Initialisere med en standardverdi
+
+
+	// Standard verdier for comboboxen
 	private static final ObservableList<String> comboValg =
 		FXCollections.observableArrayList(
 			"navn",
 			"postnummer",
 			"kundenummer"
 			);
+
+
 	/**
 	 * GUI-start
 	 * @param primaryStage
@@ -45,20 +61,25 @@ public class Main extends Application
 	public void start(Stage primaryStage) throws Exception
 	{
 		// Opprette GUI-kontainere
-		Group root = new Group(); // Overflødig men legger til av gammel vane..
+		Group root = new Group();
 		Scene scene = new Scene(root);
-		hovedLayout.minWidthProperty().bind(scene.widthProperty());
+		hovedLayout.minWidthProperty().bind(scene.widthProperty()); // Sett hovedLayout bredde til vinduets bredde!
 		root.getChildren().add(hovedLayout);
 
+		// Diverse initialisering av GUI
 		opprettGUIElementer();
 		leggTilPersoner();
 
 		// Primary stage
 		primaryStage.setWidth(800);
 		primaryStage.setHeight(600);
-		primaryStage.setTitle("Program");
+		primaryStage.setTitle("Oblig 1");
 		primaryStage.setScene(scene);
 		primaryStage.show();
+
+
+		// Skriv ut personlisten til tekstområdet.
+		oppdaterVisning();
 	}
 
 	/**
@@ -81,23 +102,35 @@ public class Main extends Application
 		tekstOmråde.setEditable(false);
 
 		comboBox = new ComboBox<>(comboValg);
+		comboBox.getSelectionModel().select(0); // Velg "navn" som default.
+
+		// Lytter etter om verdien endres
 		comboBox.valueProperty().addListener((observable, oldValue, newValue) -> {
 			if(newValue.compareTo(comboValg.get(0))==0) comparator = Komparatorer::compareNavn;
 			if(newValue.compareTo(comboValg.get(1))==0) comparator = Komparatorer::comparePostNr;
 			if(newValue.compareTo(comboValg.get(2))==0) comparator = Komparatorer::compareKundenummer;
 		});
 
+		// Knapp med boolean verdi. Brukes for å velge om man skal "sortere baklengs"
 		sorterBaklengs = new ToggleButton("Omvendt");
+
+		// Når denne er trykt på sorter
 		sortButton = new Button("Sorter");
 		sortButton.setOnAction(e->sorter());
+		Button nyPerson = new Button("Opprett person");
+		nyPerson.setOnAction(e->opprettPersonDialog());
 
 		HBox knappeLinje = new HBox();
 		knappeLinje.setSpacing(5);
-		knappeLinje.getChildren().addAll(comboBox, sortButton, sorterBaklengs);
-		hovedLayout.getChildren().addAll(tekstOmråde, knappeLinje);
+		knappeLinje.getChildren().addAll(comboBox, sorterBaklengs, sortButton);
+		hovedLayout.getChildren().addAll(tekstOmråde, knappeLinje, nyPerson);
 
 	}
 
+	/**
+	 * Metode for å sortere personlisten. Oppdaterer visningen etter listen er sortert.
+	 * Sorteringen er basert på hvilken komparator som er valgt.
+	 */
 	private void sorter()
 	{
 		// Sorter!
@@ -110,14 +143,80 @@ public class Main extends Application
 		oppdaterVisning();
 	}
 
+	/**
+	 * Oppdaterer visningen i henhold til personlisten
+	 */
 	private void oppdaterVisning()
 	{
-		StringBuilder buffer = new StringBuilder();
+		StringBuilder buffer = new StringBuilder(); // Muterbar streng.
 		for(Person p : personer){
 			buffer.append(p.toString());
 			buffer.append('\n'); // En linje for hvert objekt!
 		}
 		tekstOmråde.setText(buffer.toString());
+	}
+
+	/**
+	 * Enkel og kjapp dialog for oppretting av ny person
+	 */
+	private void opprettPersonDialog()
+	{
+		TextInputDialog opprettPerson = new TextInputDialog();
+		opprettPerson.setTitle("Opprett ny person!");
+		opprettPerson.setHeaderText("Skriv inn personinformasjon på format:");
+		opprettPerson.setContentText("navn, kundenummer(heltall), gateadresse, poststed, postnummer");
+
+		Optional<String> res = opprettPerson.showAndWait();
+		String resultat = "";
+		boolean ok = false;
+
+		if(res.isPresent()){
+			resultat = res.get();
+			ok = opprettNyPerson(resultat);
+		}
+		if(!ok){
+			feilmelding("Ugyldig tekststreng, du skrev:\n" + resultat);
+		}
+	}
+
+	/**
+	 * Feilmelding
+	 * @param melding feilmelding du ønsker å vise
+	 */
+	private void feilmelding(String melding)
+	{
+		Alert feil = new Alert(Alert.AlertType.ERROR);
+		feil.setTitle("Feil!");
+		feil.setContentText(melding);
+		feil.showAndWait();
+	}
+
+	/**
+	 * Kjapp og gal metode for å opprette en ny person basert på en semikolonseparert liste
+	 * @param person Streng der elementer er separert med komma
+	 * @return true hvis godkjent, false ellers
+	 */
+	private boolean opprettNyPerson(String person)
+	{
+		String[] oppdelt = person.split(",");
+
+		int kundenummer=0;
+		int postnummer=0;
+
+		if(oppdelt.length!=5) return false;
+
+		try{
+			kundenummer = Integer.valueOf(oppdelt[1]);
+			postnummer = Integer.valueOf(oppdelt[4]);
+		} catch (Exception e){
+			//feilmelding(e.getMessage());
+			System.err.println("Feil under parsing av tall!");
+			return false;
+		}
+
+		personer.add(new Person(oppdelt[0], kundenummer, oppdelt[2], oppdelt[3],postnummer));
+		oppdaterVisning();
+		return true;
 	}
 	/**
 	 * Programmets entry-point
