@@ -38,4 +38,30 @@ public class Person
 		this(navn, kundenummer, new Adresse(gateadresse, poststed, postnummer));
 	}
 
+	/**
+	 *
+	 * @return navn
+	 */
+	public String getNavn()
+	{
+		return navn;
+	}
+
+	/**
+	 *
+	 * @return adresse objekt!
+	 */
+	public Adresse getAdresse()
+	{
+		return adresse;
+	}
+
+	/**
+	 *
+	 * @return kundenummer
+	 */
+	public int getKundenummer()
+	{
+		return kundenummer;
+	}
 }

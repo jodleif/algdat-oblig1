@@ -23,4 +23,19 @@ public class Adresse
 		this.poststed = poststed;
 		this.postnummer = postnummer;
 	}
+
+	public String getGateadresse()
+	{
+		return gateadresse;
+	}
+
+	public String getPoststed()
+	{
+		return poststed;
+	}
+
+	public int getPostnummer()
+	{
+		return postnummer;
+	}
 }
